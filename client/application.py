@@ -14,7 +14,7 @@ class Server(QThread):
         os.chdir(web_dir)
 
         Handler = http.server.SimpleHTTPRequestHandler
-        httpd = socketserver.TCPServer(("127.0.0.1", 8080), Handler)
+        httpd = socketserver.TCPServer(("127.0.0.1", 8090), Handler)
         httpd.serve_forever()
 
 class HelloWorldHtmlApp(QWebEngineView):
@@ -24,7 +24,7 @@ class HelloWorldHtmlApp(QWebEngineView):
         #QWebEngineSettings.globalSettings().setAttribute(
         # QWebEngineSettings.ShowScrollBars, False)
 
-        self.setUrl(QUrl("http://127.0.0.1:8080"))
+        self.setUrl(QUrl("http://127.0.0.1:8090"))
 
         self.channel = QWebChannel()
         self.channel.registerObject('backend', self)
@@ -82,7 +82,7 @@ class MainWindow(QMainWindow):
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.setMouseTracking(True)
         self.setWindowTitle(title)
-        self.resize(1200,600)
+        self.resize(1900,1000)
         frameGm = self.frameGeometry()
         frameGm = self.window().frameGeometry()
         frameGm.moveCenter(QApplication.desktop().screenGeometry(
