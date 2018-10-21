@@ -43,15 +43,18 @@ def threaded_function(param):
     )
 
 
-
 class Server(QThread):
     def run(self):
         web_dir = "html"
         os.chdir(web_dir)
 
         Handler = http.server.SimpleHTTPRequestHandler
-        httpd = socketserver.TCPServer(("127.0.0.1", 8095), Handler)
+        httpd = socketserver.TCPServer(("127.0.0.1", 8097), Handler)
         httpd.serve_forever()
+
+
+server = Server()
+
 
 class HelloWorldHtmlApp(QWebEngineView):
     def __init__(self):
@@ -60,7 +63,7 @@ class HelloWorldHtmlApp(QWebEngineView):
         #QWebEngineSettings.globalSettings().setAttribute(
         # QWebEngineSettings.ShowScrollBars, False)
 
-        self.setUrl(QUrl("http://127.0.0.1:8095"))
+        self.setUrl(QUrl("http://127.0.0.1:8097"))
 
         self.channel = QWebChannel()
         self.channel.registerObject('backend', self)
@@ -74,8 +77,7 @@ class HelloWorldHtmlApp(QWebEngineView):
         self.movePos = None
 
     @pyqtSlot(str)
-    def foo(self, param):
-
+    def connect_to_server(self, param):
         thread = Thread(target = threaded_function, args=[param])
         thread.start()
         print('input was:', param)
@@ -131,8 +133,7 @@ class MainWindow(QMainWindow):
         # ).cursor().pos())).center())
         #self.move(frameGm.topLeft())
 
-        self.server = Server()
-        self.server.start()
+        server.start()
 
         view = HelloWorldHtmlApp()
         self.setCentralWidget(view)
@@ -143,5 +144,7 @@ if __name__ == "__main__":
         app = QApplication(['--disable-web-security'])
         win = MainWindow()
         app.exec_()
-    except Exception as e:
-        exit()
+    except KeyboardInterrupt:
+        print("Interuppted")
+        win.server.join()
+        exit(0)
