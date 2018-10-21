@@ -10,7 +10,8 @@ ewmh = EWMH()
 
 games = {
     252950: b'Rocket League',
-    730: b'Counter-Strike: Global Offensive - OpenGL'
+    730: b'Counter-Strike: Global Offensive - OpenGL',
+    333420: b''
 }
 
 working_thread = None
@@ -107,8 +108,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     time.sleep(1)
                 else:
                     return
-
-            time.sleep(3)                     
+                time.sleep(3)
+                                     
             thread = threading.Thread(target=start_vnc_session, args=(game_name, ))       
             thread.start()          
 
