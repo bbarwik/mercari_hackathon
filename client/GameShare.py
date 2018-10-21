@@ -39,7 +39,7 @@ def threaded_function(param):
         'Encoding=Tight',
         'Subsampling=4X',
         'SecurityTypes=None',
-        'Quality=50'
+        'Quality=50',
     ], stdin=None, stdout=None, stderr=None, close_fds=True
     )
 
@@ -49,7 +49,7 @@ class Server(QThread):
         os.chdir(HTML_PATH)
 
         Handler = http.server.SimpleHTTPRequestHandler
-        httpd = socketserver.TCPServer(("127.0.0.1", 8099), Handler)
+        httpd = socketserver.TCPServer(("127.0.0.1", 8102), Handler)
         httpd.serve_forever()
 
 
@@ -63,7 +63,7 @@ class HelloWorldHtmlApp(QWebEngineView):
         #QWebEngineSettings.globalSettings().setAttribute(
         # QWebEngineSettings.ShowScrollBars, False)
 
-        self.setUrl(QUrl("http://127.0.0.1:8099"))
+        self.setUrl(QUrl("http://127.0.0.1:8102"))
 
         self.channel = QWebChannel()
         self.channel.registerObject('backend', self)
