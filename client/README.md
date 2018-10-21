@@ -10,6 +10,7 @@ local machine for development and testing purposes.
 ### Prerequisites
 
 - python3
+- TurboVNC Viewer
 
 ### Installing required packages
 

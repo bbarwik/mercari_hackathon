@@ -13,6 +13,7 @@ from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEnginePage, QWebEngineS
 
 
 VNC_EXECUTABLE_PATH = '/Users/rbuzu/projects/turbovnc/build/java/VncViewer.jar'
+HTML_PATH = '/Users/rbuzu/projects/mercari_hackathon/client/html'
 SERVER_IP_WITH_PROTOCOL = 'http://10.42.0.1'
 SERVER_IP = '10.42.0.1'
 SERVER_PORT = 8000
@@ -45,11 +46,10 @@ def threaded_function(param):
 
 class Server(QThread):
     def run(self):
-        web_dir = "html"
-        os.chdir(web_dir)
+        os.chdir(HTML_PATH)
 
         Handler = http.server.SimpleHTTPRequestHandler
-        httpd = socketserver.TCPServer(("127.0.0.1", 8097), Handler)
+        httpd = socketserver.TCPServer(("127.0.0.1", 8099), Handler)
         httpd.serve_forever()
 
 
@@ -63,7 +63,7 @@ class HelloWorldHtmlApp(QWebEngineView):
         #QWebEngineSettings.globalSettings().setAttribute(
         # QWebEngineSettings.ShowScrollBars, False)
 
-        self.setUrl(QUrl("http://127.0.0.1:8097"))
+        self.setUrl(QUrl("http://127.0.0.1:8099"))
 
         self.channel = QWebChannel()
         self.channel.registerObject('backend', self)
@@ -82,7 +82,6 @@ class HelloWorldHtmlApp(QWebEngineView):
         thread.start()
         print('input was:', param)
 
-
     @pyqtSlot()
     def closeWindow(self):
         self.window().close()
@@ -90,6 +89,7 @@ class HelloWorldHtmlApp(QWebEngineView):
     @pyqtSlot(bool)
     def pageLoaded(self, status):
         self.window().show()
+        self.page().runJavaScript('window.scrollTo(0, 0);')
 
     def eventFilter(self, source, event):
         if event.type() == QEvent.MouseMove:
@@ -97,7 +97,7 @@ class HelloWorldHtmlApp(QWebEngineView):
                 delta = event.globalPos() - self.movePos
                 #self.window().move(self.window().x()+delta.x(), self.window(
                 # ).y()+delta.y())
-                self.movePos = event.globalPos()
+                #self.movePos = event.globalPos()
         elif event.type() == QEvent.MouseButtonDblClick:
             if event.button() == Qt.LeftButton:
                 self.movePos = event.globalPos()
@@ -113,9 +113,11 @@ class HelloWorldHtmlApp(QWebEngineView):
             elif event.key() in (ord('q'), ord('Q')):
                 self.window().close()
             elif event.key() in (ord('c'), ord('C')):
-                frameGm = self.window().frameGeometry()
-                frameGm.moveCenter(QApplication.desktop().screenGeometry(QApplication.desktop().screenNumber(QApplication.desktop().cursor().pos())).center())
-                self.window().move(frameGm.topLeft())
+                pass
+                #frameGm = self.window().frameGeometry()
+                #frameGm.moveCenter(QApplication.desktop().screenGeometry(
+                # QApplication.desktop().screenNumber(QApplication.desktop().cursor().pos())).center())
+                #self.window().move(frameGm.topLeft())
 
         return False
 
@@ -128,10 +130,10 @@ class MainWindow(QMainWindow):
         self.resize(1200, 700)
         frameGm = self.frameGeometry()
         frameGm = self.window().frameGeometry()
-        #frameGm.moveCenter(QApplication.desktop().screenGeometry(
-        #    QApplication.desktop().screenNumber(QApplication.desktop(
-        # ).cursor().pos())).center())
-        #self.move(frameGm.topLeft())
+        frameGm.moveCenter(QApplication.desktop().screenGeometry(
+            QApplication.desktop().screenNumber(QApplication.desktop(
+         ).cursor().pos())).center())
+        self.move(frameGm.topLeft())
 
         server.start()
 
@@ -140,11 +142,6 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == "__main__":
-    try:
-        app = QApplication(['--disable-web-security'])
-        win = MainWindow()
-        app.exec_()
-    except KeyboardInterrupt:
-        print("Interuppted")
-        win.server.join()
-        exit(0)
+    app = QApplication(['--disable-web-security'])
+    win = MainWindow()
+    app.exec_()
