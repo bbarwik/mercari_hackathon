@@ -1,11 +1,47 @@
 import http.server
 import socketserver
+import time
 import os
+from threading import Thread
+import subprocess
 
+import requests
 from PyQt5.QtCore import pyqtSlot, Qt, QEvent, QThread, QUrl, QObject, pyqtSignal
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QMainWindow)
 from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEnginePage, QWebEngineSettings
+
+
+VNC_EXECUTABLE_PATH = '/Users/rbuzu/projects/turbovnc/build/java/VncViewer.jar'
+SERVER_IP_WITH_PROTOCOL = 'http://10.42.0.1'
+SERVER_IP = '10.42.0.1'
+SERVER_PORT = 8000
+SERVER_URL = '{}:{}'.format(SERVER_IP_WITH_PROTOCOL, SERVER_PORT)
+
+
+def threaded_function(param):
+    resp = requests.get('{}/{}'.format(SERVER_URL, param))
+    time.sleep(2)
+    process = subprocess.Popen([
+        'java',
+        '-jar',
+        VNC_EXECUTABLE_PATH,
+        'Server={}'.format(SERVER_IP),
+        'FullScreen=1',
+        'RecvClipboard=0',
+        'SendClipboard=0',
+        'Shared=0',
+        'Colors=65536',
+        'LocalCursor=0',
+        'CursorShape=0',
+        'CompressLevel=0',
+        'Encoding=Tight',
+        'Subsampling=4X',
+        'SecurityTypes=None',
+        'Quality=50'
+    ], stdin=None, stdout=None, stderr=None, close_fds=True
+    )
+
 
 
 class Server(QThread):
@@ -14,7 +50,7 @@ class Server(QThread):
         os.chdir(web_dir)
 
         Handler = http.server.SimpleHTTPRequestHandler
-        httpd = socketserver.TCPServer(("127.0.0.1", 8090), Handler)
+        httpd = socketserver.TCPServer(("127.0.0.1", 8095), Handler)
         httpd.serve_forever()
 
 class HelloWorldHtmlApp(QWebEngineView):
@@ -24,7 +60,7 @@ class HelloWorldHtmlApp(QWebEngineView):
         #QWebEngineSettings.globalSettings().setAttribute(
         # QWebEngineSettings.ShowScrollBars, False)
 
-        self.setUrl(QUrl("http://127.0.0.1:8090"))
+        self.setUrl(QUrl("http://127.0.0.1:8095"))
 
         self.channel = QWebChannel()
         self.channel.registerObject('backend', self)
@@ -39,7 +75,11 @@ class HelloWorldHtmlApp(QWebEngineView):
 
     @pyqtSlot(str)
     def foo(self, param):
-        print('test', param)
+
+        thread = Thread(target = threaded_function, args=[param])
+        thread.start()
+        print('input was:', param)
+
 
     @pyqtSlot()
     def closeWindow(self):
@@ -53,7 +93,8 @@ class HelloWorldHtmlApp(QWebEngineView):
         if event.type() == QEvent.MouseMove:
             if self.movePos:
                 delta = event.globalPos() - self.movePos
-                self.window().move(self.window().x()+delta.x(), self.window().y()+delta.y())
+                #self.window().move(self.window().x()+delta.x(), self.window(
+                # ).y()+delta.y())
                 self.movePos = event.globalPos()
         elif event.type() == QEvent.MouseButtonDblClick:
             if event.button() == Qt.LeftButton:
@@ -82,12 +123,13 @@ class MainWindow(QMainWindow):
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.setMouseTracking(True)
         self.setWindowTitle(title)
-        self.resize(1900,1000)
+        self.resize(1200, 700)
         frameGm = self.frameGeometry()
         frameGm = self.window().frameGeometry()
-        frameGm.moveCenter(QApplication.desktop().screenGeometry(
-            QApplication.desktop().screenNumber(QApplication.desktop().cursor().pos())).center())
-        self.move(frameGm.topLeft())
+        #frameGm.moveCenter(QApplication.desktop().screenGeometry(
+        #    QApplication.desktop().screenNumber(QApplication.desktop(
+        # ).cursor().pos())).center())
+        #self.move(frameGm.topLeft())
 
         self.server = Server()
         self.server.start()
@@ -97,6 +139,9 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == "__main__":
-    app = QApplication(['--disable-web-security'])
-    win = MainWindow()
-    app.exec_()
+    try:
+        app = QApplication(['--disable-web-security'])
+        win = MainWindow()
+        app.exec_()
+    except Exception as e:
+        exit()
